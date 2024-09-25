@@ -30,6 +30,6 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/images.json
+          git add images.json
           git commit -m "Update image URLs [skip ci]" || echo "No changes to commit"
           git push

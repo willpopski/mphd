@@ -38,9 +38,9 @@ async function main() {
 
     console.log(`Extracted ${imageUrls.length} image URLs.`);
 
-    const outputPath = path.join(__dirname, '..', 'public', 'images.json');
+    const outputPath = path.join(__dirname, 'images.json');
     fs.writeFileSync(outputPath, JSON.stringify(imageUrls, null, 2));
-    console.log(`Successfully wrote ${imageUrls.length} image URLs to public/images.json`);
+    console.log(`Successfully wrote ${imageUrls.length} image URLs to ./images.json`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);

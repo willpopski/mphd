@@ -1,4 +1,4 @@
-// public/scripts.js
+// ./scripts.js
 
 document.addEventListener('DOMContentLoaded', () => {
     fetch('images.json')
