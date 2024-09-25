@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let filteredAuthor = null; // Track the current author filter
   let hiddenAuthors = new Set(); // Track hidden authors
 
-  // Function to shuffle the array
+  // Function to shuffle the array (same as before)
   function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(window.crypto.getRandomValues(new Uint32Array(1))[0] / (2 ** 32) * (i + 1));
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Function to parse author and title from the URL
+  // Function to parse author and title from the URL (same as before)
   function parseAuthorAndTitle(url) {
     try {
       const urlObj = new URL(url);
@@ -47,6 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error parsing author and title from URL:', url, error);
       return { author: 'Unknown', title: 'Unknown' };
     }
+  }
+
+  // Function to show toast message
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast show';
+    setTimeout(() => {
+      toast.className = toast.className.replace('show', '');
+    }, 3000);
   }
 
   // Function to render images
@@ -93,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Create span elements for title and author
       const titleSpan = document.createElement('span');
-      titleSpan.textContent = `${title} by `;
+      titleSpan.textContent = `${title} by`;
 
       const authorSpan = document.createElement('span');
       authorSpan.textContent = author;
@@ -108,18 +118,23 @@ document.addEventListener('DOMContentLoaded', () => {
       authorContainer.classList.add('author-container');
       authorContainer.appendChild(authorSpan);
 
-      // Filter icon
-      const filterIcon = document.createElement('span');
-      filterIcon.classList.add('icon-button');
-      filterIcon.innerHTML = '🔍'; // Replace with an image if desired
+      // Filter button
+      const filterButton = document.createElement('a');
+      filterButton.classList.add('icon-button');
+      filterButton.href = '#';
+      filterButton.textContent = `🔍 Only show ${author}`;
 
-      // Add event listener to the filter icon
-      filterIcon.addEventListener('click', (event) => {
+      // Add event listener to the filter button
+      filterButton.addEventListener('click', (event) => {
+        event.preventDefault();
         event.stopPropagation(); // Prevent event bubbling
         filteredAuthor = author;
         renderImages();
         // Show the reset filter button
         document.getElementById('resetFilterButton').style.display = 'block';
+
+        // Show toast message
+        showToast(`Now showing only images by ${author}.`);
 
         // PostHog event tracking for author filter
         posthog.capture('Author Filtered', {
@@ -128,18 +143,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
 
-      // Hide icon (closed eye icon)
-      const hideIcon = document.createElement('span');
-      hideIcon.classList.add('icon-button');
-      hideIcon.innerHTML = '🙈'; // Replace with an image if desired
+      // Hide button
+      const hideButton = document.createElement('a');
+      hideButton.classList.add('icon-button');
+      hideButton.href = '#';
+      hideButton.textContent = `🙈 Hide ${author}`;
 
-      // Add event listener to the hide icon
-      hideIcon.addEventListener('click', (event) => {
+      // Add event listener to the hide button
+      hideButton.addEventListener('click', (event) => {
+        event.preventDefault();
         event.stopPropagation();
         hiddenAuthors.add(author);
         renderImages();
         // Show the reset filter button
         document.getElementById('resetFilterButton').style.display = 'block';
+
+        // Show toast message
+        showToast(`Images by ${author} are now hidden.`);
 
         // PostHog event tracking for author hide
         posthog.capture('Author Hidden', {
@@ -148,9 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
 
-      // Append icons to author container
-      authorContainer.appendChild(filterIcon);
-      authorContainer.appendChild(hideIcon);
+      // Append buttons to author container
+      if (filteredAuthor === author) {
+        filterButton.style.display = 'none'; // Hide filter button if already filtered
+        hideButton.style.display = 'none'; // Hide hide button if already filtered
+      }
+      authorContainer.appendChild(filterButton);
+      authorContainer.appendChild(hideButton);
 
       // Append title and authorContainer to labelText
       labelText.appendChild(titleSpan);
@@ -217,6 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderImages();
     // Hide the reset filter button
     resetFilterButton.style.display = 'none';
+
+    // Show toast message
+    showToast('Filters have been reset.');
 
     // PostHog event tracking for reset filter
     posthog.capture('Filters Reset');
