@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const slide = document.createElement('div');
         slide.classList.add('swiper-slide');
 
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', '');
+        // const link = document.createElement('a');
+        // link.href = url;
+        // link.setAttribute('download', '');
 
         const img = document.createElement('img');
         img.setAttribute('src', url);
@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const preloader = document.createElement('div');
         preloader.classList.add('swiper-lazy-preloader');
 
-        link.appendChild(img);
-        slide.appendChild(link);
+        // link.appendChild(img);
+        slide.appendChild(img);
         slide.appendChild(preloader);
         carousel.appendChild(slide);
       });
