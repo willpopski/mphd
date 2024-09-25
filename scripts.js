@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let imageUrls = [];
   let allImageData = []; // Store parsed data for each image
   let filteredAuthor = null; // Track the current author filter
+  let hiddenAuthors = new Set(); // Track hidden authors
 
-  // Function to shuffle the array (same as before)
+  // Function to shuffle the array
   function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(window.crypto.getRandomValues(new Uint32Array(1))[0] / (2 ** 32) * (i + 1));
@@ -13,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Function to parse author and title from the URL (same as before)
+  // Function to parse author and title from the URL
   function parseAuthorAndTitle(url) {
     try {
       const urlObj = new URL(url);
@@ -54,10 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear existing images
     imageContainer.innerHTML = '';
 
-    // Filter images if an author is selected
-    let imagesToDisplay = allImageData;
+    // Filter images if an author is selected or hidden
+    let imagesToDisplay = allImageData.filter(data => !hiddenAuthors.has(data.author));
+
     if (filteredAuthor) {
-      imagesToDisplay = allImageData.filter(data => data.author === filteredAuthor);
+      imagesToDisplay = imagesToDisplay.filter(data => data.author === filteredAuthor);
+    }
+
+    if (imagesToDisplay.length === 0) {
+      const noImagesMessage = document.createElement('p');
+      noImagesMessage.textContent = 'No images to display.';
+      noImagesMessage.style.color = '#EEE';
+      imageContainer.appendChild(noImagesMessage);
+      return;
     }
 
     imagesToDisplay.forEach(data => {
@@ -93,16 +103,15 @@ document.addEventListener('DOMContentLoaded', () => {
         authorSpan.classList.add('highlight');
       }
 
-      // Append title and author to labelText
-      labelText.appendChild(titleSpan);
-      labelText.appendChild(authorSpan);
+      // Wrap author name and icons
+      const authorContainer = document.createElement('span');
+      authorContainer.classList.add('author-container');
+      authorContainer.appendChild(authorSpan);
 
       // Filter icon
       const filterIcon = document.createElement('span');
-      filterIcon.classList.add('filter-icon');
-
-      // Use a Unicode funnel symbol as the filter icon (or use an image if preferred)
-      filterIcon.innerHTML = '🔍'; // You can replace this with an <img> tag for a custom icon
+      filterIcon.classList.add('icon-button');
+      filterIcon.innerHTML = '🔍'; // Replace with an image if desired
 
       // Add event listener to the filter icon
       filterIcon.addEventListener('click', (event) => {
@@ -111,11 +120,44 @@ document.addEventListener('DOMContentLoaded', () => {
         renderImages();
         // Show the reset filter button
         document.getElementById('resetFilterButton').style.display = 'block';
+
+        // PostHog event tracking for author filter
+        posthog.capture('Author Filtered', {
+          author: author,
+          title: title,
+        });
       });
 
-      // Append text and icon to label
+      // Hide icon (closed eye icon)
+      const hideIcon = document.createElement('span');
+      hideIcon.classList.add('icon-button');
+      hideIcon.innerHTML = '🙈'; // Replace with an image if desired
+
+      // Add event listener to the hide icon
+      hideIcon.addEventListener('click', (event) => {
+        event.stopPropagation();
+        hiddenAuthors.add(author);
+        renderImages();
+        // Show the reset filter button
+        document.getElementById('resetFilterButton').style.display = 'block';
+
+        // PostHog event tracking for author hide
+        posthog.capture('Author Hidden', {
+          author: author,
+          title: title,
+        });
+      });
+
+      // Append icons to author container
+      authorContainer.appendChild(filterIcon);
+      authorContainer.appendChild(hideIcon);
+
+      // Append title and authorContainer to labelText
+      labelText.appendChild(titleSpan);
+      labelText.appendChild(authorContainer);
+
+      // Append labelText to label
       label.appendChild(labelText);
-      label.appendChild(filterIcon);
 
       // Wrap image and label
       const imageWrapper = document.createElement('div');
@@ -162,14 +204,21 @@ document.addEventListener('DOMContentLoaded', () => {
   shuffleButton.addEventListener('click', () => {
     shuffleArray(allImageData);
     renderImages();
+
+    // PostHog event tracking for shuffle
+    posthog.capture('Images Shuffled');
   });
 
   // Add event listener to the Reset Filter button
   const resetFilterButton = document.getElementById('resetFilterButton');
   resetFilterButton.addEventListener('click', () => {
     filteredAuthor = null;
+    hiddenAuthors.clear();
     renderImages();
     // Hide the reset filter button
     resetFilterButton.style.display = 'none';
+
+    // PostHog event tracking for reset filter
+    posthog.capture('Filters Reset');
   });
 });

@@ -48,11 +48,14 @@ body {
   left: 0;
   width: 100%;
   padding: 10px;
-  font-size: 14px; /* Smaller text */
-  color: #EEE; /* Near white text */
-  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
-  backdrop-filter: blur(5px); /* Blurred background */
+  font-size: 14px;
+  color: #EEE;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .image-label p {
@@ -79,7 +82,21 @@ body {
 .image-label p {
   margin: 0;
   text-align: center;
-  flex: 1; /* Allow it to take up available space */
+}
+
+/* Style for icons */
+.icon-button {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  margin-left: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.icon-button img {
+  width: 100%;
+  height: 100%;
 }
 
 .filter-icon {
@@ -113,4 +130,10 @@ body {
 .highlight {
   color: #FFD700; /* Gold color for highlighting */
   font-weight: bold;
+}
+
+.author-container {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
 }
