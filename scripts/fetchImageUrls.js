@@ -29,7 +29,7 @@ async function main() {
       }
     }
 
-    const outputPath = path.join(__dirname, '..', 'public', 'images.json');
+    const outputPath = path.join(__dirname, '..', 'images.json');
     fs.writeFileSync(outputPath, JSON.stringify(imageUrls, null, 2));
     console.log(`Successfully wrote ${imageUrls.length} image URLs to images.json`);
   } catch (error) {
