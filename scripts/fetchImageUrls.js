@@ -1,23 +1,30 @@
 // scripts/fetchImageUrls.js
 
-const fs = require('fs');
-const path = require('path');
-const fetch = require('node-fetch');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// __dirname is not available in ESM, so we need to recreate it
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function main() {
   const apiUrl = 'https://storage.googleapis.com/panels-api/data/20240916/media-1a-i-p~s';
-  
+
   try {
+    console.log(`Fetching data from API: ${apiUrl}`);
     const response = await fetch(apiUrl);
+    console.log(`Received response with status: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch JSON: ${response.statusText}`);
+      throw new Error(`⛔ Failed to fetch JSON file: ${response.statusText}`);
     }
 
     const jsonData = await response.json();
     const data = jsonData.data;
 
     if (!data) {
-      throw new Error('JSON does not have a "data" property.');
+      throw new Error('⛔ JSON does not have a "data" property at its root.');
     }
 
     const imageUrls = [];
@@ -29,9 +36,11 @@ async function main() {
       }
     }
 
-    const outputPath = path.join(__dirname, '..', 'images.json');
+    console.log(`Extracted ${imageUrls.length} image URLs.`);
+
+    const outputPath = path.join(__dirname, '..', 'public', 'images.json');
     fs.writeFileSync(outputPath, JSON.stringify(imageUrls, null, 2));
-    console.log(`Successfully wrote ${imageUrls.length} image URLs to images.json`);
+    console.log(`Successfully wrote ${imageUrls.length} image URLs to public/images.json`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);

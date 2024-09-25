@@ -1,3 +1,5 @@
+# .github/workflows/update-images.yml
+
 name: Update Image URLs
 
 on:
@@ -16,7 +18,7 @@ jobs:
       - name: Set Up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '20' # As per previous updates
 
       - name: Install Dependencies
         run: npm install
