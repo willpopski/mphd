@@ -59,11 +59,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000);
   }
 
-  // Function to render images
   function renderImages() {
     const imageContainer = document.getElementById('imageContainer');
     // Clear existing images
     imageContainer.innerHTML = '';
+
+    // Update the persistent filter message
+    const filterMessage = document.getElementById('filterMessage');
+    if (filteredAuthor) {
+      filterMessage.style.display = 'block';
+      filterMessage.innerHTML = `Filtered to ${filteredAuthor}'s images <a id="clearFilter">(clear filter)</a>`;
+
+      // Add event listener to clear filter link
+      document.getElementById('clearFilter').addEventListener('click', () => {
+        filteredAuthor = null;
+        renderImages();
+        filterMessage.style.display = 'none';
+
+        // Hide the reset filter button if no hidden authors
+        if (hiddenAuthors.size === 0) {
+          document.getElementById('resetFilterButton').style.display = 'none';
+        }
+
+        // Show toast message
+        showToast('Filter has been cleared.');
+
+        // PostHog event tracking for reset filter
+        posthog.capture('Filter Cleared');
+      });
+    } else {
+      filterMessage.style.display = 'none';
+    }
 
     // Filter images if an author is selected or hidden
     let imagesToDisplay = allImageData.filter(data => !hiddenAuthors.has(data.author));
@@ -82,48 +108,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     imagesToDisplay.forEach(data => {
       const { url, author, title } = data;
-
+  
       // Create image element
       const img = document.createElement('img');
       img.setAttribute('loading', 'lazy');
       img.setAttribute('src', url);
       img.alt = `${title} by ${author}`;
-
+  
       // Create link around the image
       const link = document.createElement('a');
       link.href = url;
       link.appendChild(img);
-
+  
       // Create label
       const label = document.createElement('div');
       label.classList.add('image-label');
-
-      // Text content
+  
+      // Title text
       const labelText = document.createElement('p');
-
-      // Create span elements for title and author
-      const titleSpan = document.createElement('span');
-      titleSpan.textContent = `${title} by`;
-
-      const authorSpan = document.createElement('span');
-      authorSpan.textContent = author;
-
-      // Highlight the author's name if filtered
-      if (filteredAuthor && author === filteredAuthor) {
-        authorSpan.classList.add('highlight');
-      }
-
-      // Wrap author name and icons
-      const authorContainer = document.createElement('span');
-      authorContainer.classList.add('author-container');
-      authorContainer.appendChild(authorSpan);
-
+      labelText.textContent = `${title} by ${author}`;
+  
+      // Buttons container (centered)
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.classList.add('buttons-container');
+  
       // Filter button
       const filterButton = document.createElement('a');
       filterButton.classList.add('icon-button');
       filterButton.href = '#';
-      filterButton.textContent = `🔍 Only show ${author}`;
-
+      filterButton.textContent = `🔍 Only ${author}`;
+  
       // Add event listener to the filter button
       filterButton.addEventListener('click', (event) => {
         event.preventDefault();
@@ -132,10 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderImages();
         // Show the reset filter button
         document.getElementById('resetFilterButton').style.display = 'block';
-
+  
         // Show toast message
         showToast(`Now showing only images by ${author}.`);
-
+  
         // PostHog event tracking for author filter
         posthog.capture('Author Filtered', {
           author: author,
@@ -143,55 +157,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
 
-      // Hide button
-      const hideButton = document.createElement('a');
-      hideButton.classList.add('icon-button');
-      hideButton.href = '#';
-      hideButton.textContent = `🙈 Hide ${author}`;
+    // Hide button
+    const hideButton = document.createElement('a');
+    hideButton.classList.add('icon-button');
+    hideButton.href = '#';
+    hideButton.textContent = `🙈 Hide ${author}`;
 
-      // Add event listener to the hide button
-      hideButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        hiddenAuthors.add(author);
-        renderImages();
-        // Show the reset filter button
-        document.getElementById('resetFilterButton').style.display = 'block';
+    // Add event listener to the hide button
+    hideButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      hiddenAuthors.add(author);
+      renderImages();
+      // Show the reset filter button
+      document.getElementById('resetFilterButton').style.display = 'block';
 
-        // Show toast message
-        showToast(`Images by ${author} are now hidden.`);
+      // Show toast message
+      showToast(`Images by ${author} are now hidden.`);
 
-        // PostHog event tracking for author hide
-        posthog.capture('Author Hidden', {
-          author: author,
-          title: title,
-        });
+      // PostHog event tracking for author hide
+      posthog.capture('Author Hidden', {
+        author: author,
+        title: title,
       });
-
-      // Append buttons to author container
-      if (filteredAuthor === author) {
-        filterButton.style.display = 'none'; // Hide filter button if already filtered
-        hideButton.style.display = 'none'; // Hide hide button if already filtered
-      }
-      authorContainer.appendChild(filterButton);
-      authorContainer.appendChild(hideButton);
-
-      // Append title and authorContainer to labelText
-      labelText.appendChild(titleSpan);
-      labelText.appendChild(authorContainer);
-
-      // Append labelText to label
-      label.appendChild(labelText);
-
-      // Wrap image and label
-      const imageWrapper = document.createElement('div');
-      imageWrapper.classList.add('image-wrapper');
-      imageWrapper.appendChild(link);
-      imageWrapper.appendChild(label);
-
-      // Append to container
-      imageContainer.appendChild(imageWrapper);
     });
+
+    // Append buttons to buttons container
+    if (filteredAuthor === author) {
+      filterButton.style.display = 'none'; // Hide filter button if already filtered
+      hideButton.style.display = 'none'; // Hide hide button if already filtered
+    }
+    buttonsContainer.appendChild(filterButton);
+    buttonsContainer.appendChild(hideButton);
+
+    // Append labelText and buttonsContainer to label
+    label.appendChild(labelText);
+    label.appendChild(buttonsContainer);
+
+    // Wrap image and label
+    const imageWrapper = document.createElement('div');
+    imageWrapper.classList.add('image-wrapper');
+    imageWrapper.appendChild(link);
+    imageWrapper.appendChild(label);
+
+    // Append to container
+    imageContainer.appendChild(imageWrapper);
+  });
   }
 
   // Fetch images.json and initialize

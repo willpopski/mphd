@@ -1,16 +1,49 @@
 /* ./styles.css */
 
+/* Existing styles remain unchanged */
+
+/* Body Styles */
 body {
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
   background-color: #000;
-  color: #EEE; /* Near white text color */
+  color: #EEE;
 }
 
-#shuffleButton {
-  display: block;
-  margin: 20px auto;
+/* Persistent Filter Message */
+#filterMessage {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(34, 34, 34, 0.9);
+  color: #EEE;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 18px;
+  z-index: 1000;
+}
+
+#filterMessage a {
+  color: #FFD700;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 16px;
+}
+
+/* Buttons Container */
+#buttonsContainer {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+/* Buttons Styling */
+#shuffleButton,
+#resetFilterButton {
   padding: 10px 20px;
   font-size: 18px;
   background-color: #444;
@@ -19,139 +52,88 @@ body {
   cursor: pointer;
 }
 
-#shuffleButton:hover {
+#shuffleButton:hover,
+#resetFilterButton:hover {
   background-color: #555;
 }
 
+/* Image Container */
 #imageContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* Image Wrapper */
 .image-wrapper {
   position: relative;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   width: 100%;
   max-width: 800px;
+  min-height: 400px;
+  background-color: #000;
 }
 
+/* Image Styling */
 .image-wrapper img {
   width: 100%;
   height: auto;
   display: block;
 }
 
+/* Image Label */
 .image-label {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   font-size: 14px;
   color: #EEE;
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(5px);
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Stack content vertically */
+  align-items: center; /* Center horizontally */
   justify-content: center;
 }
 
 .image-label p {
-  margin: 0;
-  text-align: center;
+  margin: 2px 0 5px 0;
+  text-align: center; /* Center text */
 }
 
-.image-label {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 10px;
-  font-size: 14px;
-  color: #EEE; /* Near white text */
-  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
-  backdrop-filter: blur(5px); /* Blurred background */
-  box-sizing: border-box;
-  display: flex; /* Added for layout */
-  align-items: center; /* Center vertically */
-  justify-content: center; /* Center horizontally */
+/* Buttons Container in Labels */
+.buttons-container {
+  display: flex;
+  justify-content: center; /* Center buttons horizontally */
+  flex-wrap: wrap; /* Allow buttons to wrap if necessary */
+  gap: 6px;
 }
 
-.image-label p {
-  margin: 0;
-  text-align: center;
-}
-
-/* Style for icons */
+/* Icon Button */
 .icon-button {
   cursor: pointer;
-  margin-left: 5px;
+  margin: 2px 0 0 0; /* Adjust margins for spacing */
   display: inline-flex;
   align-items: center;
-  font-size: 12px; /* Smaller text */
+  font-size: 12px;
   color: #EEE;
   background-color: rgba(0, 0, 0, 0.5);
-  padding: 2px 5px;
+  padding: 2px 4px;
   border-radius: 3px;
   text-decoration: none;
-}
-
-.icon-button img {
-  width: 100%;
-  height: 100%;
 }
 
 .icon-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-
-.filter-icon {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.filter-icon img {
-  width: 100%;
-  height: 100%;
-}
-
-/* Style for the reset filter button */
-#resetFilterButton {
-  display: none; /* Hidden by default */
-  margin: 10px auto;
-  padding: 8px 16px;
-  font-size: 16px;
-  background-color: #444;
-  color: #EEE;
-  border: none;
-  cursor: pointer;
-}
-
-#resetFilterButton:hover {
-  background-color: #555;
-}
-
-.highlight {
-  color: #FFD700; /* Gold color for highlighting */
-  font-weight: bold;
-}
-
-.author-container {
-  display: inline-flex;
-  align-items: center;
-  margin-left: 5px;
-}
-
-/* Styles for the toast message */
+/* Toast message styles */
 .toast {
   visibility: hidden;
   min-width: 200px;
-  margin-left: -100px;
   background-color: #333;
   color: #EEE;
   text-align: center;
@@ -161,6 +143,7 @@ body {
   z-index: 1;
   left: 50%;
   bottom: 30px;
+  transform: translateX(-50%);
   font-size: 14px;
 }
 
@@ -169,13 +152,24 @@ body {
   animation: fadein 0.5s, fadeout 0.5s 2.5s;
 }
 
-/* Animations for toast */
 @keyframes fadein {
-  from { bottom: 20px; opacity: 0; }
-  to { bottom: 30px; opacity: 1; }
+  from {
+    bottom: 20px;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
 }
 
 @keyframes fadeout {
-  from { bottom: 30px; opacity: 1; }
-  to { bottom: 40px; opacity: 0; }
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 40px;
+    opacity: 0;
+  }
 }
