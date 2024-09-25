@@ -2,6 +2,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   let imageUrls = [];
+  let allImageData = []; // Store parsed data for each image
+  let filteredAuthor = null; // Track the current author filter
 
   // Function to shuffle the array (same as before)
   function shuffleArray(array) {
@@ -52,8 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear existing images
     imageContainer.innerHTML = '';
 
-    imageUrls.forEach(url => {
-      const { author, title } = parseAuthorAndTitle(url);
+    // Filter images if an author is selected
+    let imagesToDisplay = allImageData;
+    if (filteredAuthor) {
+      imagesToDisplay = allImageData.filter(data => data.author === filteredAuthor);
+    }
+
+    imagesToDisplay.forEach(data => {
+      const { url, author, title } = data;
 
       // Create image element
       const img = document.createElement('img');
@@ -69,9 +77,45 @@ document.addEventListener('DOMContentLoaded', () => {
       // Create label
       const label = document.createElement('div');
       label.classList.add('image-label');
+
+      // Text content
       const labelText = document.createElement('p');
-      labelText.textContent = `${title} by ${author}`;
+
+      // Create span elements for title and author
+      const titleSpan = document.createElement('span');
+      titleSpan.textContent = `${title} by `;
+
+      const authorSpan = document.createElement('span');
+      authorSpan.textContent = author;
+
+      // Highlight the author's name if filtered
+      if (filteredAuthor && author === filteredAuthor) {
+        authorSpan.classList.add('highlight');
+      }
+
+      // Append title and author to labelText
+      labelText.appendChild(titleSpan);
+      labelText.appendChild(authorSpan);
+
+      // Filter icon
+      const filterIcon = document.createElement('span');
+      filterIcon.classList.add('filter-icon');
+
+      // Use a Unicode funnel symbol as the filter icon (or use an image if preferred)
+      filterIcon.innerHTML = '🔍'; // You can replace this with an <img> tag for a custom icon
+
+      // Add event listener to the filter icon
+      filterIcon.addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent event bubbling
+        filteredAuthor = author;
+        renderImages();
+        // Show the reset filter button
+        document.getElementById('resetFilterButton').style.display = 'block';
+      });
+
+      // Append text and icon to label
       label.appendChild(labelText);
+      label.appendChild(filterIcon);
 
       // Wrap image and label
       const imageWrapper = document.createElement('div');
@@ -84,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Fetch images.json and initialize (same as before)
+  // Fetch images.json and initialize
   fetch('images.json')
     .then(response => {
       if (!response.ok) {
@@ -98,6 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       imageUrls = urls;
       shuffleArray(imageUrls);
+      // Parse data and store it
+      allImageData = imageUrls.map(url => {
+        const { author, title } = parseAuthorAndTitle(url);
+        return { url, author, title };
+      });
       renderImages();
     })
     .catch(error => {
@@ -108,10 +157,19 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.appendChild(errorMessage);
     });
 
-  // Add event listener to the Shuffle Images button (same as before)
+  // Add event listener to the Shuffle Images button
   const shuffleButton = document.getElementById('shuffleButton');
   shuffleButton.addEventListener('click', () => {
-    shuffleArray(imageUrls);
+    shuffleArray(allImageData);
     renderImages();
+  });
+
+  // Add event listener to the Reset Filter button
+  const resetFilterButton = document.getElementById('resetFilterButton');
+  resetFilterButton.addEventListener('click', () => {
+    filteredAuthor = null;
+    renderImages();
+    // Hide the reset filter button
+    resetFilterButton.style.display = 'none';
   });
 });
