@@ -19,22 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const slide = document.createElement('div');
         slide.classList.add('swiper-slide');
 
-        // const link = document.createElement('a');
-        // link.href = url;
-        // link.setAttribute('download', '');
+        const link = document.createElement('a');
+        link.href = url;
 
         const img = document.createElement('img');
-        img.setAttribute('src', url);
         img.setAttribute('loading', 'lazy');
+        img.setAttribute('src', url);
         img.alt = 'Carousel Image';
-        img.classList.add('swiper-lazy');
 
         // Lazy Load Preloader
         const preloader = document.createElement('div');
         preloader.classList.add('swiper-lazy-preloader');
 
-        // link.appendChild(img);
-        slide.appendChild(img);
+        link.appendChild(img);
+        slide.appendChild(link);
         slide.appendChild(preloader);
         carousel.appendChild(slide);
       });
@@ -42,15 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Initialize Swiper
       const swiper = new Swiper('.swiper-container', {
         loop: true,
-        preloadImages: false, // Disable preloading of all images
-        lazy: {
-          enabled: true,
-          loadPrevNext: true, // Load images in adjacent slides
-        },
-        pagination: {
-          el: '.swiper-pagination',
-          clickable: true,
-        },
+        lazyPreloadPrevNext: 1, // Number of slides to preload on either side of the active slide
         navigation: {
           nextEl: '.swiper-button-next',
           prevEl: '.swiper-button-prev',
