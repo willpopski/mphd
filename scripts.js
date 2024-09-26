@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Create like count
       const likeCount = document.createElement('div');
       likeCount.classList.add('like-count');
-      likeCount.textContent = 'Loading...';
+      likeCount.textContent = '';
 
       // Append heart icon and like count to like icon container
       likeIconContainer.appendChild(heartIcon);
@@ -170,10 +170,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (error && error.code !== 'PGRST116') { // PGRST116: No rows found
         console.error('Error fetching likes:', error);
-        likeCount.textContent = '0';
+        // Do not show like count
       } else {
         const count = likeData ? likeData.like_count : 0;
-        likeCount.textContent = `${count}`;
+
+        if (count === 0) {
+          // If count is zero, don't show the like count element
+          likeCount.textContent = 'Like';
+        } else {
+          likeCount.textContent = `${count}`;
+        }
       }
 
       // Add event listener to the heart icon
@@ -187,7 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Update local storage
+        const likedImages = JSON.parse(localStorage.getItem('likedImages')) || {};
         likedImages[url] = true;
+        console.log('Liked images:', likedImages);
         localStorage.setItem('likedImages', JSON.stringify(likedImages));
         hasLiked = true;
 
@@ -205,17 +213,25 @@ document.addEventListener('DOMContentLoaded', () => {
           heartIcon.classList.remove('animate');
         }, 500); // Match with CSS animation duration
 
-        // Increment the like count in Supabase
-        const { data: updatedLikeData, error: updateError } = await supabaseClient
-          .from('likes')
-          .upsert({ image_url: url, like_count: (likeData ? likeData.like_count + 1 : 1) })
-          .eq('image_url', url)
-          .select();
+        // Call the database function to increment the like count
+        const { data: rpcData, error: rpcError } = await supabaseClient.rpc('increment_like_count', { p_image_url: url });
 
-        if (updateError) {
-          console.error('Error updating likes:', updateError);
+        if (rpcError) {
+          console.error('Error incrementing like count:', rpcError);
+        }
+
+        // Fetch the updated like count
+        const { data: likeData, error: fetchError } = await supabaseClient
+          .from('likes')
+          .select('like_count')
+          .eq('image_url', url)
+          .single();
+
+        if (fetchError) {
+          console.error('Error fetching updated like count:', fetchError);
         } else {
-          const newCount = updatedLikeData[0].like_count;
+          // Update the like count display
+          const newCount = likeData.like_count;
           likeCount.textContent = `${newCount}`;
         }
       });
