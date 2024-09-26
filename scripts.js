@@ -1,5 +1,9 @@
 // ./scripts.js
 
+const supabaseUrl = 'https://hoeywgbjthkwvulyaguk.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvZXl3Z2JqdGhrd3Z1bHlhZ3VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjczNjIxMTEsImV4cCI6MjA0MjkzODExMX0.c4bunr-IRIjpnhFbNd7B12vNnRD-I1RwLcdlRLFYk04'
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+
 document.addEventListener('DOMContentLoaded', () => {
   let imageUrls = [];
   let allImageData = []; // Store parsed data for each image
@@ -110,38 +114,130 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    imagesToDisplay.forEach(data => {
+    imagesToDisplay.forEach(async (data) => {
       const { url, author, title } = data;
-  
+
       // Create image element
       const img = document.createElement('img');
       img.setAttribute('loading', 'lazy');
       img.setAttribute('src', url);
       img.alt = `${title} by ${author}`;
-  
+
       // Create link around the image
       const link = document.createElement('a');
       link.href = url;
       link.appendChild(img);
-  
+
+      // Create like icon container
+      const likeIconContainer = document.createElement('div');
+      likeIconContainer.classList.add('like-icon-container');
+
+      // Create heart icon (using SVG for better control)
+      const heartIcon = document.createElement('div');
+      heartIcon.classList.add('heart-icon');
+      heartIcon.innerHTML = `
+      <svg viewBox="0 0 32 29.6">
+        <path d="M23.6,0c-3.4,0-6.4,2.2-7.6,5.4C14.8,2.2,11.8,0,8.4,0
+                 C3.7,0,0,3.7,0,8.4c0,9.5,16,21.2,16,21.2s16-11.7,16-21.2
+                 C32,3.7,28.3,0,23.6,0z" fill="currentColor"/>
+      </svg>
+    `;
+
+      // Create like count
+      const likeCount = document.createElement('div');
+      likeCount.classList.add('like-count');
+      likeCount.textContent = 'Loading...';
+
+      // Append heart icon and like count to like icon container
+      likeIconContainer.appendChild(heartIcon);
+      likeIconContainer.appendChild(likeCount);
+
+      // Check if the image has been liked in local storage
+      const likedImages = JSON.parse(localStorage.getItem('likedImages')) || {};
+      let hasLiked = likedImages[url];
+
+      // Change the heart icon color if already liked
+      if (hasLiked) {
+        heartIcon.classList.add('liked');
+      }
+
+      // Fetch the current like count from Supabase
+      const { data: likeData, error } = await supabaseClient
+        .from('likes')
+        .select('like_count')
+        .eq('image_url', url)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116: No rows found
+        console.error('Error fetching likes:', error);
+        likeCount.textContent = '0';
+      } else {
+        const count = likeData ? likeData.like_count : 0;
+        likeCount.textContent = `${count}`;
+      }
+
+      // Add event listener to the heart icon
+      heartIcon.addEventListener('click', async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (hasLiked) {
+          // Already liked, do nothing
+          return;
+        }
+
+        // Update local storage
+        likedImages[url] = true;
+        localStorage.setItem('likedImages', JSON.stringify(likedImages));
+        hasLiked = true;
+
+        posthog.capture('Image Liked', {
+          title: title,
+          author: author,
+        });
+
+        // Animate heart icon
+        heartIcon.classList.add('liked');
+        heartIcon.classList.add('animate');
+
+        // Remove the animate class after animation completes
+        setTimeout(() => {
+          heartIcon.classList.remove('animate');
+        }, 500); // Match with CSS animation duration
+
+        // Increment the like count in Supabase
+        const { data: updatedLikeData, error: updateError } = await supabaseClient
+          .from('likes')
+          .upsert({ image_url: url, like_count: (likeData ? likeData.like_count + 1 : 1) })
+          .eq('image_url', url)
+          .select();
+
+        if (updateError) {
+          console.error('Error updating likes:', updateError);
+        } else {
+          const newCount = updatedLikeData[0].like_count;
+          likeCount.textContent = `${newCount}`;
+        }
+      });
+
       // Create label
       const label = document.createElement('div');
       label.classList.add('image-label');
-  
+
       // Title text
       const labelText = document.createElement('p');
       labelText.textContent = `${title} by ${author}`;
-  
+
       // Buttons container (centered)
       const buttonsContainer = document.createElement('div');
       buttonsContainer.classList.add('buttons-container');
-  
+
       // Filter button
       const filterButton = document.createElement('a');
       filterButton.classList.add('icon-button');
       filterButton.href = '#';
       filterButton.textContent = `🔍 Only ${author}`;
-  
+
       // Add event listener to the filter button
       filterButton.addEventListener('click', (event) => {
         event.preventDefault();
@@ -150,10 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderImages();
         // Show the reset filter button
         document.getElementById('resetFilterButton').style.display = 'block';
-  
+
         // Show toast message
         showToast(`Now showing only images by ${author}.`);
-  
+
         // PostHog event tracking for author filter
         posthog.capture('Author Filtered', {
           author: author,
@@ -161,52 +257,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
 
-    // Hide button
-    const hideButton = document.createElement('a');
-    hideButton.classList.add('icon-button');
-    hideButton.href = '#';
-    hideButton.textContent = `🙈 Hide ${author}`;
+      // Hide button
+      const hideButton = document.createElement('a');
+      hideButton.classList.add('icon-button');
+      hideButton.href = '#';
+      hideButton.textContent = `🙈 Hide ${author}`;
 
-    // Add event listener to the hide button
-    hideButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      hiddenAuthors.add(author);
-      renderImages();
-      // Show the reset filter button
-      document.getElementById('resetFilterButton').style.display = 'block';
+      // Add event listener to the hide button
+      hideButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        hiddenAuthors.add(author);
+        renderImages();
+        // Show the reset filter button
+        document.getElementById('resetFilterButton').style.display = 'block';
 
-      // Show toast message
-      showToast(`Images by ${author} are now hidden.`);
+        // Show toast message
+        showToast(`Images by ${author} are now hidden.`);
 
-      // PostHog event tracking for author hide
-      posthog.capture('Author Hidden', {
-        author: author,
-        title: title,
+        // PostHog event tracking for author hide
+        posthog.capture('Author Hidden', {
+          author: author,
+          title: title,
+        });
       });
+
+      // Append buttons to buttons container
+      if (filteredAuthor === author) {
+        filterButton.style.display = 'none'; // Hide filter button if already filtered
+        hideButton.style.display = 'none'; // Hide hide button if already filtered
+      }
+
+      buttonsContainer.appendChild(filterButton);
+      buttonsContainer.appendChild(hideButton);
+
+      // Append labelText and buttonsContainer to label
+      label.appendChild(labelText);
+      label.appendChild(buttonsContainer);
+
+      // Wrap image and label
+      const imageWrapper = document.createElement('div');
+      imageWrapper.classList.add('image-wrapper');
+      imageWrapper.appendChild(link);
+      imageWrapper.appendChild(likeIconContainer);
+      imageWrapper.appendChild(label);
+
+      // Append to container
+      imageContainer.appendChild(imageWrapper);
     });
-
-    // Append buttons to buttons container
-    if (filteredAuthor === author) {
-      filterButton.style.display = 'none'; // Hide filter button if already filtered
-      hideButton.style.display = 'none'; // Hide hide button if already filtered
-    }
-    buttonsContainer.appendChild(filterButton);
-    buttonsContainer.appendChild(hideButton);
-
-    // Append labelText and buttonsContainer to label
-    label.appendChild(labelText);
-    label.appendChild(buttonsContainer);
-
-    // Wrap image and label
-    const imageWrapper = document.createElement('div');
-    imageWrapper.classList.add('image-wrapper');
-    imageWrapper.appendChild(link);
-    imageWrapper.appendChild(label);
-
-    // Append to container
-    imageContainer.appendChild(imageWrapper);
-  });
   }
 
   // Fetch images.json and initialize

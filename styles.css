@@ -1,7 +1,5 @@
 /* ./styles.css */
 
-/* Existing styles remain unchanged */
-
 /* Body Styles */
 body {
   margin: 0;
@@ -67,7 +65,7 @@ body {
 /* Image Wrapper */
 .image-wrapper {
   position: relative;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   width: 100%;
   max-width: 800px;
   min-height: 400px;
@@ -110,6 +108,84 @@ body {
   justify-content: center; /* Center buttons horizontally */
   flex-wrap: wrap; /* Allow buttons to wrap if necessary */
   gap: 6px;
+}
+
+/* Like Icon Container */
+.like-icon-container {
+  position: absolute;
+  top: 50%;
+  right: 20px; /* Adjust to position towards the right side */
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  z-index: 2; /* Ensure it appears above the image but below the overlay */
+}
+
+/* Heart Icon */
+.heart-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+
+.heart-icon svg {
+  width: 64px; /* Adjust size as needed */
+  height: 64px;
+  fill: currentColor;
+  opacity: 0.95; /* Slight translucence */
+  filter: drop-shadow(#444 0.5px 0.5px);
+}
+
+.heart-icon.liked {
+  color: #FF0000; /* Red color when liked */
+}
+
+.heart-icon.animate {
+  animation: bounce 0.5s;
+}
+
+/* Animation Keyframes */
+@keyframes bounce {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  75% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Like Count */
+.like-count {
+  font-size: 18px;
+  color: #FFFFFF;
+  margin-top: 5px;
+  text-align: center;
+  filter: drop-shadow(#444 0.5px 0.5px);
+}
+
+/* Adjust z-index if necessary */
+.like-icon-container {
+  z-index: 2; /* Ensure it appears above the image but below the overlay */
+}
+
+.image-label {
+  z-index: 3; /* Overlay with title and buttons */
 }
 
 /* Icon Button */
