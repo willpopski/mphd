@@ -98,6 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
       imagesToDisplay = imagesToDisplay.filter(data => data.author === filteredAuthor);
     }
 
+    // Update the Shuffle Images button text with the count
+    const shuffleButton = document.getElementById('shuffleButton');
+    shuffleButton.textContent = `Shuffle ${imagesToDisplay.length} Images`;
+
     if (imagesToDisplay.length === 0) {
       const noImagesMessage = document.createElement('p');
       noImagesMessage.textContent = 'No images to display.';
